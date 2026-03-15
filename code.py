@@ -7,9 +7,8 @@ from adafruit_hid.keycode import Keycode
 import time
 
 # Configuration
-WINDOWS = True  # Set to True for Windows, False for MacOS
+WINDOWS = True  # Set to True for Windows, False for MacOS (default on startup)
 LEDS = True  # Set to True to enable LEDs, False to disable
-
 
 CMD = Keycode.CONTROL  # Default to CONTROL for Windows
 if not WINDOWS:
@@ -18,6 +17,7 @@ if not WINDOWS:
 # Constants
 DEBOUNCE_TIME = 0.1  # Debounce time set at this number of seconds
 STARTUP_BLINK_TIME = 0.2  # The LEDs blink at start up for this number of seconds
+OS_SWITCH_BLINK_TIME = 0.15  # LED blink speed when switching OS mode
 
 # Setting up the buttons
 # Button 1 (Hand) on GPIO14
@@ -81,6 +81,35 @@ keyboard = Keyboard(usb_hid.devices)
 
 
 while True:
+    # Toggle between Windows and MacOS by pressing Button 1 + Button 4 together
+    if button1.value is False and button4.value is False:
+        WINDOWS = not WINDOWS
+        if WINDOWS:
+            CMD = Keycode.CONTROL
+            print("Switched to Windows mode")
+        else:
+            CMD = Keycode.COMMAND
+            print("Switched to MacOS mode")
+        # LED feedback: blink to confirm switch
+        # 1 blink = MacOS, 2 blinks = Windows
+        if LEDS:
+            blink_count = 2 if WINDOWS else 1
+            for _ in range(blink_count):
+                led1.value = True
+                led2.value = True
+                led3.value = True
+                led4.value = True
+                time.sleep(OS_SWITCH_BLINK_TIME)
+                led1.value = False
+                led2.value = False
+                led3.value = False
+                led4.value = False
+                time.sleep(OS_SWITCH_BLINK_TIME)
+        time.sleep(DEBOUNCE_TIME)
+        # Wait for both buttons to be released
+        while button1.value is False or button4.value is False:
+            time.sleep(0.01)
+
     if button1.value is False:  # Button pressed (active low)
         if LEDS:
             led1.value = not led1.value  # This toggles the LED on / off
