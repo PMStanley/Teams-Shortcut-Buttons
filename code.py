@@ -81,20 +81,14 @@ keyboard = Keyboard(usb_hid.devices)
 
 
 while True:
-    # Toggle between Windows and MacOS by pressing Button 1 + Button 4 together
+    # Button 1 + Button 4: Switch to Windows mode
     if button1.value is False and button4.value is False:
-        WINDOWS = not WINDOWS
-        if WINDOWS:
+        if not WINDOWS:
+            WINDOWS = True
             CMD = Keycode.CONTROL
             print("Switched to Windows mode")
-        else:
-            CMD = Keycode.COMMAND
-            print("Switched to MacOS mode")
-        # LED feedback: blink to confirm switch
-        # 1 blink = MacOS, 2 blinks = Windows
         if LEDS:
-            blink_count = 2 if WINDOWS else 1
-            for _ in range(blink_count):
+            for _ in range(2):
                 led1.value = True
                 led2.value = True
                 led3.value = True
@@ -106,8 +100,28 @@ while True:
                 led4.value = False
                 time.sleep(OS_SWITCH_BLINK_TIME)
         time.sleep(DEBOUNCE_TIME)
-        # Wait for both buttons to be released
         while button1.value is False or button4.value is False:
+            time.sleep(0.01)
+
+    # Button 2 + Button 3: Switch to MacOS mode
+    if button2.value is False and button3.value is False:
+        if WINDOWS:
+            WINDOWS = False
+            CMD = Keycode.COMMAND
+            print("Switched to MacOS mode")
+        if LEDS:
+            led1.value = True
+            led2.value = True
+            led3.value = True
+            led4.value = True
+            time.sleep(OS_SWITCH_BLINK_TIME)
+            led1.value = False
+            led2.value = False
+            led3.value = False
+            led4.value = False
+            time.sleep(OS_SWITCH_BLINK_TIME)
+        time.sleep(DEBOUNCE_TIME)
+        while button2.value is False or button3.value is False:
             time.sleep(0.01)
 
     if button1.value is False:  # Button pressed (active low)
